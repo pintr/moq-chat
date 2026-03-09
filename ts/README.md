@@ -1,4 +1,4 @@
-# MoQ Chat
+# moq-keycast
 
 A live-typing demo built with [Media over QUIC](https://github.com/moq-dev/moq) (`@moq/lite`).
 
@@ -15,8 +15,8 @@ Each user has two UI areas:
 Browser A                   moq-relay                   Browser B
    │                           │                           │
    │── publish broadcast ────▶│                           │
-   │   moq-chat/room/alice     │◀─── announced prefix ────│
-   │                           │   moq-chat/room/          │
+   │   moq-keycast/room/alice     │◀─── announced prefix ────│
+   │                           │   moq-keycast/room/          │
    │                           │                           │
    │  [user types "h"]         │                           │
    │── typing group "h" ─────▶│── typing group "h" ─────▶│ card shows "h"
@@ -28,7 +28,7 @@ Browser A                   moq-relay                   Browser B
 
 **MoQ path layout:**
 
-- Each user publishes `moq-chat/{roomId}/{username}` (one broadcast per user)
+- Each user publishes `moq-keycast/{roomId}/{username}` (one broadcast per user)
 - `typing` track – one group per keystroke; each group = the full current text snapshot
 
 The relay and `@moq/lite` automatically discard stale groups, so subscribers always receive the latest snapshot — no debounce or client-side buffering needed.
@@ -38,7 +38,7 @@ The relay and `@moq/lite` automatically discard stale groups, so subscribers alw
 ## Project structure
 
 ```
-moq-chat/
+moq-keycast/
 ├── compose.yml                 # Orchestrates relay + frontend
 ├── relay/
 │   └── Dockerfile              # Builds moq-relay from moq-dev/moq source

@@ -1,5 +1,5 @@
 # =============================================================================
-# compose.yml – moq-chat (root)
+# compose.yml – moq-keycast (root)
 # =============================================================================
 #
 # Services:
@@ -87,7 +87,7 @@ services:
         # Baked into the JS bundle at build time.
         # Browsers connect to the relay directly on the host-mapped port.
         VITE_RELAY_URL: http://localhost:4443
-    container_name: moq-chat-frontend
+    container_name: moq-keycast-frontend
     ports:
       - "8080:80"
     depends_on:

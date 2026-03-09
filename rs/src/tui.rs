@@ -137,7 +137,7 @@ fn render(frame: &mut Frame, app: &App) {
     };
 
     let title = format!(
-        " moq-chat :: {} | {} peer{} ",
+        " moq-keycast :: {} | {} peer{} ",
         app.room,
         app.peers.len(),
         if app.peers.len() == 1 { "" } else { "s" }

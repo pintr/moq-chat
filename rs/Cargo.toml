@@ -1,11 +1,11 @@
 [package]
-name = "moq-chat"
+name = "moq-keycast"
 version = "0.1.0"
 edition = "2021"
-description = "Live-typing MoQ chat: every keystroke delivered over QUIC"
+description = "Live-typing keystroke broadcast over MoQ/QUIC"
 
 [[bin]]
-name = "moq-chat"
+name = "moq-keycast"
 path = "src/main.rs"
 
 [dependencies]

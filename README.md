@@ -1,4 +1,4 @@
-# moq-chat
+# moq-keycast
 
 A live-typing chat demo built on [Media over QUIC (MoQ)](https://datatracker.ietf.org/wg/moq/about/) — every keystroke is published to the relay and appears on every other connected user's screen in real time. There is no Send button and no message history, just raw live text delivered over QUIC.
 
@@ -31,10 +31,10 @@ For local development the relay auto-generates a self-signed TLS certificate (`-
 
 ### MoQ protocol layout
 
-Each client publishes a personal broadcast at `moq-chat/{room}/{username}` with a `typing` track. Every keystroke writes a new MoQ group to that track — a complete snapshot of the current input buffer. Subscribers watch the `moq-chat/{room}/` prefix, read the latest group from each peer's track, and discard stale ones. The result is zero-latency, keystroke-by-keystroke delivery.
+Each client publishes a personal broadcast at `moq-keycast/{room}/{username}` with a `typing` track. Every keystroke writes a new MoQ group to that track — a complete snapshot of the current input buffer. Subscribers watch the `moq-keycast/{room}/` prefix, read the latest group from each peer's track, and discard stale ones. The result is zero-latency, keystroke-by-keystroke delivery.
 
 ```
-moq-chat/{room}/{username}
+moq-keycast/{room}/{username}
   └── track "typing"    ← one group per keypress (full text snapshot)
   └── track "messages"  ← (TypeScript only) confirmed sent messages
 ```
@@ -153,7 +153,7 @@ A terminal chat client built with [ratatui](https://ratatui.rs/) and [crossterm]
 | `--username` | *(required)* | Your display name |
 | `--tls-disable-verify` | on (in container) | Skip TLS hostname verification (cert is issued for `localhost`, not `relay`) |
 
-Logs are written to `moq-chat.log` (never to stderr, which would corrupt the TUI alternate screen).
+Logs are written to `moq-keycast.log` (never to stderr, which would corrupt the TUI alternate screen).
 
 ### Build image only
 

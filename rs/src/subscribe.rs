@@ -21,7 +21,7 @@ pub async fn run(
         .await
         .context("subscriber connect")?;
 
-    let room_prefix = format!("moq-chat/{room}");
+    let room_prefix = format!("moq-keycast/{room}");
     let username_prefix = format!("{room_prefix}/");
     let room_path: moq_lite::PathOwned = room_prefix.into();
 

@@ -7,7 +7,7 @@ target/
 
 # Log files produced at runtime
 *.log
-moq-chat.log
+moq-keycast.log
 
 # Editor / IDE artefacts
 .vscode/

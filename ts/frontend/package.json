@@ -1,5 +1,5 @@
 {
-    "name": "moq-chat",
+    "name": "moq-keycast",
     "version": "1.0.0",
     "private": true,
     "description": "Live chat application built with Media over QUIC (@moq/lite)",

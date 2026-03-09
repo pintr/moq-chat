@@ -11,7 +11,7 @@ mod tui;
 pub use tui::PeerEvent;
 
 #[derive(Parser)]
-#[command(name = "moq-chat", about = "Live-typing MoQ chat — every keystroke delivered over QUIC")]
+#[command(name = "moq-keycast", about = "Live keystroke broadcast over MoQ/QUIC")]
 struct Args {
     /// Relay server URL
     #[arg(long, default_value = "https://localhost:4443")]
@@ -37,7 +37,8 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     // Log to a file — writing to stderr corrupts the ratatui alternate-screen buffer.
-    let log_file = std::fs::File::create("moq-chat.log").context("failed to create moq-chat.log")?;
+    let log_file =
+        std::fs::File::create("moq-keycast.log").context("failed to create moq-keycast.log")?;
     let filter = EnvFilter::builder()
         .with_default_directive(args.log.level().into())
         .from_env_lossy();
@@ -45,12 +46,15 @@ async fn main() -> anyhow::Result<()> {
         .with(fmt::layer().with_writer(log_file).with_filter(filter))
         .init();
 
-    let client = args.client.init().context("failed to initialise MoQ client")?;
+    let client = args
+        .client
+        .init()
+        .context("failed to initialise MoQ client")?;
 
     let (typing_tx, typing_rx) = mpsc::unbounded_channel::<String>();
     let (peer_tx, peer_rx) = mpsc::unbounded_channel::<PeerEvent>();
 
-    let broadcast_name = format!("moq-chat/{}/{}", args.room, args.username);
+    let broadcast_name = format!("moq-keycast/{}/{}", args.room, args.username);
 
     let pub_client = client.clone();
     let pub_relay = args.relay.clone();

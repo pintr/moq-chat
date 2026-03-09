@@ -37,17 +37,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN useradd --create-home --shell /bin/sh appuser
 WORKDIR /home/appuser
 
-COPY --from=builder /app/target/release/moq-chat ./moq-chat
-RUN chown appuser:appuser moq-chat
+COPY --from=builder /app/target/release/moq-keycast ./moq-keycast
+RUN chown appuser:appuser moq-keycast
 
 USER appuser
 
-# moq-chat is an interactive TUI — always run with:  podman run --rm -it ...
+# moq-keycast is an interactive TUI — always run with:  podman run --rm -it ...
 # Required flags: --username <name>
 # Optional:       --room <name>  (default: general)
 #
 # When running via podman compose, extra args are APPENDED to the ENTRYPOINT,
 # so baking the relay URL and TLS flag here ensures they are always present:
 #   podman compose run --rm tui --username alice
-#   → ./moq-chat --relay https://relay:4443 --tls-disable-verify --username alice
-ENTRYPOINT ["./moq-chat", "--relay", "https://relay:4443", "--tls-disable-verify"]
+#   → ./moq-keycast --relay https://relay:4443 --tls-disable-verify --username alice
+ENTRYPOINT ["./moq-keycast", "--relay", "https://relay:4443", "--tls-disable-verify"]

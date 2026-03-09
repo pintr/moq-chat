@@ -12,7 +12,7 @@ const activeTypingTracks = new Set<Moq.Track>();
 const activeMessageTracks = new Set<Moq.Track>();
 
 /**
- * Starts publishing this user's broadcast at `moq-chat/{roomId}/{username}`.
+ * Starts publishing this user's broadcast at `moq-keycast/{roomId}/{username}`.
  * Track subscription requests are served automatically in the background.
  */
 export async function startPublishing(

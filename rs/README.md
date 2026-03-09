@@ -1,4 +1,4 @@
-# moq-chat-rs
+# moq-keycast
 
 A terminal chat client where every keystroke is streamed live over [Media over QUIC (MoQ)](https://github.com/moq-dev/moq) — no send button, no message history.
 
@@ -6,7 +6,7 @@ A terminal chat client where every keystroke is streamed live over [Media over Q
 
 ```
 ┌──────────────────── Terminal A (alice) ──────────────────────┐
-│  moq-chat :: lobby | 1 peer                                  │
+│  moq-keycast :: lobby | 1 peer                                  │
 │  ┌──────────────────────────────────────────────────────┐    │
 │  │  bob: hey, how are                                   │    │
 │  └──────────────────────────────────────────────────────┘    │
@@ -22,7 +22,7 @@ Remote peers subscribe to all users in the room and display their current buffer
 ### MoQ path layout
 
 ```
-moq-chat/{room}/{username}  ──► broadcast
+moq-keycast/{room}/{username}  ──► broadcast
                                   └── track: "typing"
                                         └── groups: one per keystroke
                                               └── frame: full current input text
@@ -41,10 +41,10 @@ podman run --rm -p 4443:4443/udp -p 4443:4443/tcp \
   --auth-public ""
 ```
 
-Or use the relay from the companion `moq-chat` project:
+Or use the relay from the companion `moq-keycast` project:
 
 ```bash
-cd ../moq-chat && podman compose up relay
+cd ../moq-keycast && podman compose up relay
 ```
 
 ### 2 — Run the chat client
@@ -74,7 +74,7 @@ Open additional terminals with different usernames to chat.
 cargo build --release
 ```
 
-The binary will be at `target/release/moq-chat`.
+The binary will be at `target/release/moq-keycast`.
 
 ## Project layout
 

@@ -1,5 +1,5 @@
 # =============================================================================
-# compose.yml – MoQ Chat
+# compose.yml – moq-keycast
 # =============================================================================
 #
 # Services:
@@ -90,7 +90,7 @@ services:
         # Browsers always connect to localhost:4443 (host-mapped relay port).
         # Change this if you deploy behind a domain name.
         VITE_RELAY_URL: http://localhost:4443
-    container_name: moq-chat-frontend
+    container_name: moq-keycast-frontend
     ports:
       - "8080:80"
     depends_on:
