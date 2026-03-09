@@ -1,5 +1,5 @@
 # =============================================================================
-# moq-relay Dockerfile
+# relay/Dockerfile – moq-relay
 # =============================================================================
 #
 # Installs the official moq-relay binary directly from crates.io.
@@ -68,7 +68,7 @@ EXPOSE 4443/tcp
 
 ENTRYPOINT ["moq-relay"]
 
-# Default arguments (can be overridden in docker-compose.yml):
+# Default arguments (can be overridden in compose.yml):
 #
 #   --server-bind [::]:4443
 #       Binds the QUIC/WebTransport server to port 4443 (UDP, all interfaces).

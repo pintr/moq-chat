@@ -42,12 +42,12 @@ RUN chown appuser:appuser moq-chat
 
 USER appuser
 
-# moq-chat is an interactive TUI — always run with:  docker run --rm -it ...
+# moq-chat is an interactive TUI — always run with:  podman run --rm -it ...
 # Required flags: --username <name>
 # Optional:       --room <name>  (default: general)
 #
-# When running via docker compose, extra args are APPENDED to the ENTRYPOINT,
+# When running via podman compose, extra args are APPENDED to the ENTRYPOINT,
 # so baking the relay URL and TLS flag here ensures they are always present:
-#   docker compose run --rm tui --username alice
+#   podman compose run --rm tui --username alice
 #   → ./moq-chat --relay https://relay:4443 --tls-disable-verify --username alice
 ENTRYPOINT ["./moq-chat", "--relay", "https://relay:4443", "--tls-disable-verify"]

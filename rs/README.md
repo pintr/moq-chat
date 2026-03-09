@@ -33,8 +33,8 @@ moq-chat/{room}/{username}  ──► broadcast
 ### 1 — Start the relay
 
 ```bash
-docker run --rm -p 4443:4443/udp -p 4443:4443/tcp \
-  $(docker build -q ./relay) \
+podman run --rm -p 4443:4443/udp -p 4443:4443/tcp \
+  $(podman build -q ./relay) \
   --server-bind [::]:4443 \
   --web-http-listen [::]:4443 \
   --tls-generate localhost \
@@ -44,7 +44,7 @@ docker run --rm -p 4443:4443/udp -p 4443:4443/tcp \
 Or use the relay from the companion `moq-chat` project:
 
 ```bash
-cd ../moq-chat && docker compose up relay
+cd ../moq-chat && podman compose up relay
 ```
 
 ### 2 — Run the chat client

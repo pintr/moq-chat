@@ -1,5 +1,5 @@
 # =============================================================================
-# docker-compose.yml – moq-chat (root)
+# compose.yml – moq-chat (root)
 # =============================================================================
 #
 # Services:
@@ -13,7 +13,7 @@
 #               Open http://localhost:8080 in a browser to use the chat.
 #
 #   tui       – Rust terminal UI client. Only started when the "tui" profile
-#               is active (see `docker compose run` instructions below).
+#               is active (see `podman compose run` instructions below).
 #               Requires --room and --username to be passed at run time.
 #
 # ─── How the browser connects ─────────────────────────────────────────────────
@@ -30,7 +30,7 @@
 #
 # ─── How the TUI client connects ──────────────────────────────────────────────
 #
-#   The TUI container is on the same Docker network as the relay, so it
+#   The TUI container is on the same Podman network as the relay, so it
 #   connects using the internal service name "relay" (not localhost).
 #   --tls-disable-verify skips hostname validation, since the relay cert
 #   is issued for "localhost" but the container reaches it as "relay".
@@ -98,12 +98,12 @@ services:
   # Only activated with the "tui" profile; never starts automatically.
   #
   # Run it with:
-  #   docker compose run --rm tui --username <name>
+  #   podman compose run --rm tui --username <name>
   #
   # Optionally override the room (defaults to "general"):
-  #   docker compose run --rm tui --username <name> --room <room>
+  #   podman compose run --rm tui --username <name> --room <room>
   #
-  # The service connects to the relay via the internal Docker network
+  # The service connects to the relay via the internal Podman network
   # using the service name "relay", not "localhost".
   tui:
     build:
@@ -116,6 +116,6 @@ services:
       - relay
     # --relay and --tls-disable-verify are baked into the ENTRYPOINT in rs/Dockerfile.
     # Pass only --username (and optionally --room) when running:
-    #   docker compose run --rm tui --username <name>
+    #   podman compose run --rm tui --username <name>
     profiles:
       - tui

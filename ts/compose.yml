@@ -1,5 +1,5 @@
 # =============================================================================
-# docker-compose.yml – MoQ Chat
+# compose.yml – MoQ Chat
 # =============================================================================
 #
 # Services:
@@ -73,7 +73,6 @@ services:
       - "--auth-public"
       - ""
 
-    # Allow increased system memory for QUIC buffers (optional but recommended)
     ulimits:
       nofile:
         soft: 65536

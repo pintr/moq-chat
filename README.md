@@ -10,7 +10,7 @@ This repo contains two client implementations that **share the same relay and wi
 | [`rs/`](#rust-tui-client-rs) | Rust | Terminal (TUI via ratatui) |
 | [`relay/`](#the-relay) | — | Shared `moq-relay` server |
 
-Everything runs in Docker. All commands below are run from the **project root**.
+Everything runs in Podman. All commands below are run from the **project root**.
 
 ---
 
@@ -57,11 +57,11 @@ The Rust client serializes this with `serde_json` and deserializes it transparen
 │   UDP 4443 — QUIC / WebTransport                        │
 │   TCP 4443 — HTTP (cert fingerprint) + WebSocket        │
 └──────────┬───────────────────────────┬───────────────────┘
-           │  Docker internal network  │
+           │  Podman internal network  │
            │                           │
  ┌─────────┴──────────┐   ┌────────────┴──────────┐
  │  ts/ (Browser SPA) │   │  rs/ (Rust TUI)        │
- │  nginx → port 8080 │   │  docker compose run    │
+ │  nginx → port 8080 │   │  podman compose run    │
  │  browser connects  │   │  terminal              │
  │  to relay directly │   │  connects to relay     │
  └────────────────────┘   └───────────────────────┘
@@ -74,12 +74,12 @@ The Rust client serializes this with `serde_json` and deserializes it transparen
 
 ## Quick Start
 
-> **First build:** The relay Dockerfile compiles `moq-relay` from Rust source, which takes ~10–20 minutes. All subsequent builds are served from Docker layer cache.
+> **First build:** The relay Dockerfile compiles `moq-relay` from Rust source, which takes ~10–20 minutes. All subsequent builds are served from the image layer cache.
 
 ### Browser client + relay (recommended)
 
 ```bash
-docker compose up --build
+podman compose up --build
 ```
 
 Then open **<http://localhost:8080>** in Chrome (recommended) or Firefox. Open two tabs, join the same room with different usernames, and start typing.
@@ -94,25 +94,25 @@ Ports exposed on the host:
 
 ### Terminal (TUI) client
 
-The TUI client connects to the relay over the internal Docker network. Start the relay first if it is not already running:
+The TUI client connects to the relay over the internal Podman network. Start the relay first if it is not already running:
 
 ```bash
-docker compose up relay -d
+podman compose up relay -d
 ```
 
 Then run the TUI client, passing your username
 
 ```bash
-docker compose run --rm tui --username alice
+podman compose run --rm tui --username alice
 ```
 
 Open a second terminal with a different username to chat:
 
 ```bash
-docker compose run --rm tui --username bob
+podman compose run --rm tui --username bob
 ```
 
-> The `tui` service is defined with the `tui` [profile](https://docs.docker.com/compose/profiles/) so it never starts automatically with `docker compose up`.
+> The `tui` service is defined with the `tui` [profile](https://docs.podman.io/en/latest/markdown/podman-compose.1.html) so it never starts automatically with `podman compose up`.
 
 ### Running both clients together (cross-client chat)
 
@@ -120,10 +120,10 @@ The Rust TUI and the browser SPA share the same relay and wire format, so a term
 
 ```bash
 # Terminal 1 — start the relay and browser frontend
-docker compose up --build -d
+podman compose up --build -d
 
 # Terminal 2 — join as a TUI user
-docker compose run --rm tui --username alice
+podman compose run --rm tui --username alice
 
 # Then open http://localhost:8080 in a browser, join room "general" as "bob"
 # alice and bob will see each other type, keystroke by keystroke
@@ -148,7 +148,7 @@ A terminal chat client built with [ratatui](https://ratatui.rs/) and [crossterm]
 
 | Flag | Default (in container) | Description |
 |---|---|---|
-| `--relay` | `https://relay:4443` | Relay URL — uses internal Docker service name |
+| `--relay` | `https://relay:4443` | Relay URL — uses internal Podman service name |
 | `--room` | `general` | Chat room name |
 | `--username` | *(required)* | Your display name |
 | `--tls-disable-verify` | on (in container) | Skip TLS hostname verification (cert is issued for `localhost`, not `relay`) |
@@ -158,7 +158,7 @@ Logs are written to `moq-chat.log` (never to stderr, which would corrupt the TUI
 ### Build image only
 
 ```bash
-docker compose build tui
+podman compose build tui
 ```
 
 ### Dependencies
@@ -182,11 +182,11 @@ A browser-based client using [`@moq/lite`](https://www.npmjs.com/package/@moq/li
 
 ### Frontend-only dev server (hot-reload)
 
-To iterate quickly on the TypeScript frontend without rebuilding the Docker image, run the relay in Docker and the Vite dev server natively:
+To iterate quickly on the TypeScript frontend without rebuilding the container image, run the relay in Podman and the Vite dev server natively:
 
 ```bash
 # Start the relay
-docker compose up relay -d
+podman compose up relay -d
 
 # Run Vite with hot-reload (requires Node.js installed locally)
 cd ts/frontend
@@ -204,7 +204,7 @@ npm run dev
 Override for a custom relay host:
 
 ```bash
-docker compose build frontend --build-arg VITE_RELAY_URL=https://relay.example.com:4443
+podman compose build frontend --build-arg VITE_RELAY_URL=https://relay.example.com:4443
 ```
 
 ### Dependencies
@@ -219,9 +219,9 @@ docker compose build frontend --build-arg VITE_RELAY_URL=https://relay.example.c
 
 ## The Relay
 
-`moq-relay` is sourced from [moq-dev/moq](https://github.com/moq-dev/moq) and compiled during the Docker build (`relay/Dockerfile`). It is the single point all clients connect to: it fans out each publisher's tracks to all matching subscribers.
+`moq-relay` is sourced from [moq-dev/moq](https://github.com/moq-dev/moq) and compiled during the container build (`relay/Dockerfile`). It is the single point all clients connect to: it fans out each publisher's tracks to all matching subscribers.
 
-### Relay flags (configured in `docker-compose.yml`)
+### Relay flags (configured in `compose.yml`)
 
 | Flag | Value | Description |
 |---|---|---|
@@ -245,5 +245,5 @@ For production: replace `--tls-generate` with a CA-signed certificate and remove
 | Rust falls back to raw bytes | If a `typing` frame is not valid JSON, the Rust TUI displays the raw bytes — forward-compatible with hypothetical non-JSON clients |
 | `http://` relay URL in browser | `@moq/lite` auto-fetches `/certificate.sha256` and uses it as `serverCertificateHashes`, enabling WebTransport with a self-signed cert without a CA |
 | WebSocket fallback | `@moq/lite` races QUIC vs WebSocket; Firefox and Safari fall back transparently |
-| `tui` Compose profile | Prevents the interactive TUI container from starting automatically with `docker compose up` |
-| Internal Docker network for TUI | The TUI container reaches the relay by service name (`relay:4443`) without extra port mapping; `--tls-disable-verify` handles the hostname mismatch |
+| `tui` Compose profile | Prevents the interactive TUI container from starting automatically with `podman compose up` |
+| Internal Podman network for TUI | The TUI container reaches the relay by service name (`relay:4443`) without extra port mapping; `--tls-disable-verify` handles the hostname mismatch |

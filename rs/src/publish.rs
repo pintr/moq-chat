@@ -2,18 +2,12 @@ use anyhow::Context;
 use tokio::sync::mpsc;
 use url::Url;
 
-/// Publish our own typing to the relay.
+/// Publish our typing to the relay.
 ///
-/// Establishes a single MoQ session and writes one frame per keystroke
-/// on the `"typing"` track of our broadcast.
-///
-/// A no-op `"messages"` track is also created so TypeScript browser clients
-/// (which subscribe to both "typing" and "messages" for every remote user)
-/// receive a clean SUBSCRIBE_OK instead of an error response.
-///
-/// Wire format: each frame is a UTF-8 JSON object matching the TypeScript
-/// `TypingPayload` interface: `{"text":"...","timestamp":<unix_ms>}`.
-/// This makes the Rust client interoperable with the TypeScript browser client.
+/// Each keystroke is written as a JSON frame `{"text":"...","timestamp":<ms>}`
+/// on the `"typing"` track — matching the TypeScript `TypingPayload` wire format.
+/// A no-op `"messages"` track is also created so the TypeScript SPA receives a
+/// clean SUBSCRIBE_OK instead of an error when it subscribes to that track.
 pub async fn run(
     client: moq_native::Client,
     relay: Url,
@@ -23,24 +17,13 @@ pub async fn run(
     let origin = moq_lite::Origin::produce();
 
     let mut broadcast = moq_lite::Broadcast::produce();
-    let track_def = moq_lite::Track {
-        name: "typing".to_string(),
-        priority: 0,
-    };
     let mut track = broadcast
-        .create_track(track_def)
+        .create_track(moq_lite::Track { name: "typing".to_string(), priority: 0 })
         .context("create typing track")?;
 
-    // Create a no-op "messages" track so TypeScript browser clients receive a
-    // clean SUBSCRIBE_OK (instead of an error) when they subscribe to it.
-    // The Rust TUI never writes to this track; it exists solely for protocol
-    // compatibility with the TypeScript SPA.
-    let messages_def = moq_lite::Track {
-        name: "messages".to_string(),
-        priority: 0,
-    };
+    // Keep alive for TypeScript SPA compatibility — it subscribes to "messages" on every user.
     let _messages_track = broadcast
-        .create_track(messages_def)
+        .create_track(moq_lite::Track { name: "messages".to_string(), priority: 0 })
         .context("create messages track")?;
 
     origin.publish_broadcast(&broadcast_name, broadcast.consume());
@@ -58,9 +41,6 @@ pub async fn run(
             res = session.closed() => return res.context("publisher session closed"),
             msg = typing_rx.recv() => {
                 let Some(text) = msg else { break };
-                // Encode as JSON to match the TypeScript TypingPayload wire format:
-                //   { "text": "<current input>", "timestamp": <unix ms> }
-                // This lets the browser SPA decode our frames with group.readJson().
                 let timestamp = std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap_or_default()

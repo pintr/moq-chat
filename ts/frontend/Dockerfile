@@ -19,7 +19,7 @@ FROM node:22-slim AS builder
 
 WORKDIR /app
 
-# Copy dependency manifests first to leverage Docker's layer cache.
+# Copy dependency manifests first to leverage the image layer cache.
 # If package.json doesn't change, npm ci won't redownload packages on
 # subsequent builds -- even if source files change.
 COPY package.json package-lock.json* ./
@@ -32,8 +32,8 @@ COPY tsconfig.json vite.config.ts index.html ./
 COPY src/ ./src/
 
 # VITE_RELAY_URL is baked into the JS bundle at build time.
-# Default: http://localhost:4443 (relay exposed on the Docker host).
-# Override at build time:  docker build --build-arg VITE_RELAY_URL=http://myrelay:4443 .
+# Default: http://localhost:4443 (relay exposed on the host).
+# Override at build time:  podman build --build-arg VITE_RELAY_URL=http://myrelay:4443 .
 ARG VITE_RELAY_URL=http://localhost:4443
 ENV VITE_RELAY_URL=$VITE_RELAY_URL
 

@@ -33,13 +33,13 @@ Browser A                   moq-relay                   Browser B
 
 The relay and `@moq/lite` automatically discard stale groups, so subscribers always receive the latest snapshot — no debounce or client-side buffering needed.
 
-**Transport:** `@moq/lite` races WebTransport (QUIC) vs WebSocket. For local Docker development, it fetches the relay's self-signed TLS fingerprint from `http://localhost:4443/certificate.sha256` and uses `serverCertificateHashes` so the browser trusts it without a CA.
+**Transport:** `@moq/lite` races WebTransport (QUIC) vs WebSocket. For local development, it fetches the relay's self-signed TLS fingerprint from `http://localhost:4443/certificate.sha256` and uses `serverCertificateHashes` so the browser trusts it without a CA.
 
 ## Project structure
 
 ```
 moq-chat/
-├── docker-compose.yml          # Orchestrates relay + frontend
+├── compose.yml                 # Orchestrates relay + frontend
 ├── relay/
 │   └── Dockerfile              # Builds moq-relay from moq-dev/moq source
 └── frontend/
@@ -59,14 +59,14 @@ moq-chat/
     └── index.html
 ```
 
-## Quick start (Docker)
+## Quick start (Podman)
 
-> **Requirements:** Docker with Compose V2 (`docker compose version`).  
+> **Requirements:** Podman with Compose support (`podman compose version`).  
 > **First build:** The relay Dockerfile compiles Rust from source — takes ~15 min on the first run, cached after that.
 
 ```bash
 # Build and start both containers
-docker compose up --build
+podman compose up --build
 
 # Open the chat in your browser
 open http://localhost:8080
@@ -76,11 +76,11 @@ Open two browser tabs (or two browsers) at `http://localhost:8080`. Join the sam
 
 > **Chrome only for WebTransport:** Firefox and Safari don't yet support WebTransport. `@moq/lite` automatically falls back to WebSocket for unsupported browsers, so they still work — just without QUIC prioritisation.
 
-## Local development (without Docker)
+## Local development (without Podman)
 
 ```bash
 # 1. Build and run the relay container only
-docker compose up relay -d
+podman compose up relay -d
 
 # 2. Install frontend dependencies and start Vite dev server
 cd frontend
@@ -90,13 +90,13 @@ npm run dev
 # 3. Open http://localhost:5173
 ```
 
-The Vite dev server hot-reloads TypeScript changes instantly. The relay still runs in Docker.
+The Vite dev server hot-reloads TypeScript changes instantly. The relay still runs in Podman.
 
 ## Configuration
 
 | Variable | Default | Description |
 |---|---|---|
-| `VITE_RELAY_URL` | `http://localhost:4443` | MoQ relay URL seen by the **browser**. Override at build time: `docker compose build --build-arg VITE_RELAY_URL=http://myhost:4443` |
+| `VITE_RELAY_URL` | `http://localhost:4443` | MoQ relay URL seen by the **browser**. Override at build time: `podman compose build --build-arg VITE_RELAY_URL=http://myhost:4443` |
 
 ## Architecture decisions
 
