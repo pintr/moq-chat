@@ -6,8 +6,8 @@ use futures::StreamExt;
 use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    text::{Line, Span, Text},
+    widgets::{Block, Borders, Paragraph, Wrap},
     DefaultTerminal, Frame,
 };
 use std::collections::BTreeMap;
@@ -106,18 +106,34 @@ async fn event_loop(
 }
 
 fn render(frame: &mut Frame, app: &App) {
+    // Pre-compute how many rows the input box needs so the layout can reserve them.
+    // Content width = terminal width minus 2 border columns.
+    let content_width = frame.area().width.saturating_sub(2).max(1);
+    // '█' is a fake cursor — the real cursor stays hidden (ratatui hides it when
+    // set_cursor_position is not called).
+    let input_line = format!("  {}: {}█", app.username, app.input);
+    // Use char count (not byte count) for display-width accuracy, then add 1 row
+    // as a buffer because Paragraph wraps at word boundaries, not character
+    // boundaries, so the real row count can exceed the simple division.
+    let wrapped_input_rows = (input_line.chars().count() as u16)
+        .div_ceil(content_width)
+        .saturating_add(1)
+        .min(8); // cap so the input box never consumes the whole screen
+    let input_height = wrapped_input_rows + 2; // +2 for top/bottom borders
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Min(3), Constraint::Length(3)])
+        .constraints([Constraint::Min(3), Constraint::Length(input_height)])
         .split(frame.area());
 
-    let peer_items: Vec<ListItem> = if app.peers.is_empty() {
-        vec![ListItem::new(Line::from(Span::styled(
+    let peers_text: Text = if app.peers.is_empty() {
+        Text::from(Line::from(Span::styled(
             "  Waiting for others to join…",
             Style::default().fg(Color::DarkGray),
-        )))]
+        )))
     } else {
-        app.peers
+        let lines: Vec<Line> = app
+            .peers
             .iter()
             .map(|(name, text)| {
                 let label = Span::styled(
@@ -131,9 +147,10 @@ fn render(frame: &mut Frame, app: &App) {
                 } else {
                     Span::raw(text.clone())
                 };
-                ListItem::new(Line::from(vec![label, content]))
+                Line::from(vec![label, content])
             })
-            .collect()
+            .collect();
+        Text::from(lines)
     };
 
     let title = format!(
@@ -144,7 +161,7 @@ fn render(frame: &mut Frame, app: &App) {
     );
 
     frame.render_widget(
-        List::new(peer_items).block(
+        Paragraph::new(peers_text).wrap(Wrap { trim: false }).block(
             Block::default()
                 .title(title)
                 .title_style(
@@ -158,11 +175,8 @@ fn render(frame: &mut Frame, app: &App) {
         chunks[0],
     );
 
-    // '█' is a fake cursor — the real cursor stays hidden (ratatui hides it when
-    // set_cursor_position is not called).
-    let input_line = format!("  {}: {}█", app.username, app.input);
     frame.render_widget(
-        Paragraph::new(input_line).block(
+        Paragraph::new(input_line).wrap(Wrap { trim: false }).block(
             Block::default()
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::Green)),

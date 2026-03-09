@@ -34,17 +34,17 @@ export type OnLeave = () => void;
  *   - `updateTyping(username, text)` – update a peer's feed card text live
  */
 export function renderChatRoom(
-    container: HTMLElement,
-    roomId: string,
-    username: string,
-    onLeave: OnLeave
+  container: HTMLElement,
+  roomId: string,
+  username: string,
+  onLeave: OnLeave
 ): {
-    addRemoteUser: OnUserJoined;
-    removeRemoteUser: OnUserLeft;
-    updateTyping: OnTypingUpdate;
+  addRemoteUser: OnUserJoined;
+  removeRemoteUser: OnUserLeft;
+  updateTyping: OnTypingUpdate;
 } {
-    // ── Build HTML structure ─────────────────────────────────────────────────────
-    container.innerHTML = `
+  // ── Build HTML structure ─────────────────────────────────────────────────────
+  container.innerHTML = `
     <div class="chat-room">
       <!-- ── Header ─────────────────────────────────────────────────────── -->
       <header class="chat-header">
@@ -65,63 +65,82 @@ export function renderChatRoom(
       <!-- ── Footer: local input — every keystroke is sent via MoQ ──────── -->
       <footer class="chat-footer">
         <span class="local-label">${escapeHtml(username)}</span>
-        <input
+        <textarea
           id="message-input"
-          type="text"
+          rows="1"
           placeholder="Type something…"
           autocomplete="off"
           spellcheck="true"
           aria-label="Your message"
-        />
+        ></textarea>
       </footer>
     </div>
   `;
 
-    // ── DOM references ───────────────────────────────────────────────────────────
-    const liveFeeds = container.querySelector<HTMLDivElement>("#live-feeds")!;
-    const noPeersHint = container.querySelector<HTMLParagraphElement>("#no-peers-hint")!;
-    const messageInput = container.querySelector<HTMLInputElement>("#message-input")!;
-    const leaveBtn = container.querySelector<HTMLButtonElement>("#leave-btn")!;
+  // ── DOM references ───────────────────────────────────────────────────────────
+  const liveFeeds = container.querySelector<HTMLDivElement>("#live-feeds")!;
+  const noPeersHint = container.querySelector<HTMLParagraphElement>("#no-peers-hint")!;
+  const messageInput = container.querySelector<HTMLTextAreaElement>("#message-input")!;
+  const leaveBtn = container.querySelector<HTMLButtonElement>("#leave-btn")!;
 
-    // Publish every keystroke immediately — no buffering, no send button.
-    messageInput.addEventListener("input", () => {
-        container.dispatchEvent(
-            new CustomEvent("moq:typing", { detail: messageInput.value, bubbles: true })
-        );
-    });
+  // Auto-grow the textarea as text wraps onto new lines.
+  function autoResize() {
+    messageInput.style.height = "auto";
+    messageInput.style.height = messageInput.scrollHeight + "px";
+  }
 
-    leaveBtn.addEventListener("click", () => { onLeave(); });
-    messageInput.focus();
+  // Publish every keystroke immediately — no buffering, no send button.
+  messageInput.addEventListener("input", () => {
+    autoResize();
+    container.dispatchEvent(
+      new CustomEvent("moq:typing", { detail: messageInput.value, bubbles: true })
+    );
+  });
 
-    // ── Return the event handlers for the subscriber ─────────────────────────────
+  // Enter clears input (matching Rust TUI behaviour) — no newline inserted.
+  messageInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      messageInput.value = "";
+      autoResize();
+      container.dispatchEvent(
+        new CustomEvent("moq:typing", { detail: "", bubbles: true })
+      );
+    }
+  });
 
-    return {
-        addRemoteUser(remoteUsername: string): void {
-            if (liveFeeds.querySelector(`[data-username="${CSS.escape(remoteUsername)}"]`)) return;
-            noPeersHint.style.display = "none";
-            const feed = document.createElement("div");
-            feed.className = "user-feed";
-            feed.setAttribute("data-username", remoteUsername);
-            feed.innerHTML = `
+  leaveBtn.addEventListener("click", () => { onLeave(); });
+  messageInput.focus();
+
+  // ── Return the event handlers for the subscriber ─────────────────────────────
+
+  return {
+    addRemoteUser(remoteUsername: string): void {
+      if (liveFeeds.querySelector(`[data-username="${CSS.escape(remoteUsername)}"]`)) return;
+      noPeersHint.style.display = "none";
+      const feed = document.createElement("div");
+      feed.className = "user-feed";
+      feed.setAttribute("data-username", remoteUsername);
+      feed.innerHTML = `
               <div class="feed-label">${escapeHtml(remoteUsername)}</div>
               <div class="feed-text"></div>
             `;
-            liveFeeds.appendChild(feed);
-        },
+      liveFeeds.appendChild(feed);
+    },
 
-        removeRemoteUser(remoteUsername: string): void {
-            liveFeeds.querySelector(`[data-username="${CSS.escape(remoteUsername)}"]`)?.remove();
-            if (!liveFeeds.querySelector(".user-feed")) {
-                noPeersHint.style.display = "";
-            }
-        },
+    removeRemoteUser(remoteUsername: string): void {
+      liveFeeds.querySelector(`[data-username="${CSS.escape(remoteUsername)}"]`)?.remove();
+      if (!liveFeeds.querySelector(".user-feed")) {
+        noPeersHint.style.display = "";
+      }
+    },
 
-        updateTyping(remoteUsername: string, text: string): void {
-            const feed = liveFeeds.querySelector(`[data-username="${CSS.escape(remoteUsername)}"]`);
-            const textEl = feed?.querySelector<HTMLDivElement>(".feed-text");
-            if (textEl) textEl.textContent = text;
-        },
-    };
+    updateTyping(remoteUsername: string, text: string): void {
+      const feed = liveFeeds.querySelector(`[data-username="${CSS.escape(remoteUsername)}"]`);
+      const textEl = feed?.querySelector<HTMLDivElement>(".feed-text");
+      if (textEl) textEl.textContent = text;
+    },
+  };
 }
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────
@@ -131,10 +150,10 @@ export function renderChatRoom(
  * before inserting them into innerHTML contexts.
  */
 function escapeHtml(str: string): string {
-    return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#x27;");
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
 }

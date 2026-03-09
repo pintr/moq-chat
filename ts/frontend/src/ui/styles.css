@@ -79,7 +79,8 @@ button:focus-visible {
     outline: 2px solid var(--color-primary);
 }
 
-input[type="text"] {
+input[type="text"],
+textarea {
     font: inherit;
     border: 1.5px solid var(--color-border);
     border-radius: var(--radius-sm);
@@ -90,7 +91,8 @@ input[type="text"] {
     transition: border-color var(--transition);
 }
 
-input[type="text"]:focus {
+input[type="text"]:focus,
+textarea:focus {
     outline: none;
     border-color: var(--color-primary);
 }
@@ -244,11 +246,17 @@ input[type="text"]:focus {
 
 .live-feeds {
     width: 100%;
+    overflow-y: auto;
 }
 
 .feed-label {
     font-size: 20px;
     background: rgba(255, 255, 255, .1);
+}
+
+.feed-text {
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 /* ── Message list ─────────────────────────────────────────────────────────── */
@@ -421,8 +429,25 @@ input[type="text"]:focus {
     flex-shrink: 0;
 }
 
-.chat-footer input[type="text"] {
+.chat-footer {
+    align-items: flex-start;
+    /* keep label aligned to top when textarea grows */
+}
+
+.chat-footer textarea {
     flex: 1;
+    resize: none;
+    /* no manual resize handle — auto-grows via JS */
+    overflow: hidden;
+    /* hide scrollbar while auto-growing */
+    min-height: 2.2em;
+    /* roughly one line */
+    max-height: 10em;
+    /* cap at ~6-7 lines, then scroll */
+    overflow-y: auto;
+    /* scroll if cap is hit */
+    line-height: 1.45;
+    word-break: break-word;
 }
 
 /* ── Connection status banner ─────────────────────────────────────────────── */
