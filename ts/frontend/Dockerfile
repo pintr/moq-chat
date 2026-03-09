@@ -15,7 +15,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Build the Vite/TypeScript frontend
 # -----------------------------------------------------------------------------
-FROM node:22-slim AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -44,7 +44,7 @@ RUN npm run build
 # -----------------------------------------------------------------------------
 # Stage 2: Serve with nginx
 # -----------------------------------------------------------------------------
-FROM nginx:alpine AS runtime
+FROM nginx:1.27-alpine AS runtime
 
 # Remove the default nginx configuration.
 RUN rm /etc/nginx/conf.d/default.conf

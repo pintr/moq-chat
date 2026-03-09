@@ -1,5 +1,5 @@
 # ── Build stage ────────────────────────────────────────────────────────────────
-FROM rust:1.88-bookworm AS builder
+FROM rust:1.88-slim-bookworm AS builder
 
 # Build dependencies required by aws-lc-rs (pulled in via moq-native/quinn):
 #   cmake  — aws-lc build system
@@ -26,21 +26,15 @@ COPY src/ ./src/
 RUN cargo build --release --locked
 
 # ── Runtime stage ──────────────────────────────────────────────────────────────
-FROM debian:bookworm-slim AS runtime
+# distroless/cc includes glibc + libgcc_s + libstdc++ — the minimal set needed
+# by Rust release binaries. No shell, no package manager, no extra attack surface.
+# The :nonroot variant pre-creates a non-root user (uid/gid 65532).
+FROM gcr.io/distroless/cc-debian12:nonroot AS runtime
 
-# ca-certificates is needed to validate TLS certificates for the relay server
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder --chown=nonroot:nonroot /app/target/release/moq-keycast /home/nonroot/moq-keycast
 
-# Run as a non-root user
-RUN useradd --create-home --shell /bin/sh appuser
-WORKDIR /home/appuser
-
-COPY --from=builder /app/target/release/moq-keycast ./moq-keycast
-RUN chown appuser:appuser moq-keycast
-
-USER appuser
+WORKDIR /home/nonroot
+USER nonroot
 
 # moq-keycast is an interactive TUI — always run with:  podman run --rm -it ...
 # Required flags: --username <name>
@@ -50,4 +44,4 @@ USER appuser
 # so baking the relay URL and TLS flag here ensures they are always present:
 #   podman compose run --rm tui --username alice
 #   → ./moq-keycast --relay https://relay:4443 --tls-disable-verify --username alice
-ENTRYPOINT ["./moq-keycast", "--relay", "https://relay:4443", "--tls-disable-verify"]
+ENTRYPOINT ["/home/nonroot/moq-keycast", "--relay", "https://relay:4443", "--tls-disable-verify"]
